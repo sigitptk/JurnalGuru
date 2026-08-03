@@ -691,8 +691,8 @@
    2. Salin "Project URL" ke SUPABASE_URL
    3. Salin "anon public" key ke SUPABASE_ANON_KEY
    ===================================================================== */
-const SUPABASE_URL = ""; // GANTI dengan Project URL Anda
-const SUPABASE_ANON_KEY = ""; // GANTI dengan anon public key Anda
+const SUPABASE_URL = "https://jiiddthqdkyphqwdrqfi.supabase.co"; // GANTI dengan Project URL Anda
+const SUPABASE_ANON_KEY = "sb_publishable_GhV_8HKfFQ7kpW5_LYCWLg_lTv0wCkE"; // GANTI dengan anon public key Anda
 const HEADER_BUCKET = 'header-images';
 
 let sb = null;
