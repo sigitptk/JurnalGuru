@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Jurnal Mengajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg: #f5f5f3;
+    --surface: #ffffff;
+    --ink: #1c1c1e;
+    --ink-soft: #71717a;
+    --ink-faint: #a8a8ad;
+    --line: #e7e7e4;
+    --accent: #3f6259;
+    --accent-soft: #dce8e2;
+    --accent-tint: #eef3f1;
+    --danger: #b3523f;
+    --danger-soft: #f3e0da;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    padding: 0 0 40px;
+  }
+  header{ padding: 32px 22px 20px; }
+  header .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color: var(--accent);
+    margin-bottom:8px;
+  }
+  header h1{
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:26px;
+    letter-spacing:-.02em;
+    margin:0;
+    color: var(--ink);
+  }
+  header p{
+    font-size:12.5px;
+    color: var(--ink-soft);
+    margin:8px 0 0;
+  }
+  .stats{ display:flex; gap:10px; margin-top:18px; }
+  .stat{
+    flex:1;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .stat .num{
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:20px;
+    color: var(--ink);
+    line-height:1;
+  }
+  .stat .lbl{ font-size:11px; color: var(--ink-soft); margin-top:4px; }
+
+  nav.tabs{
+    display:flex;
+    margin: 4px 22px 20px;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:4px;
+    position:sticky;
+    top:12px;
+    z-index:5;
+  }
+  nav.tabs button{
+    flex:1;
+    padding:9px 6px;
+    border-radius:7px;
+    border:none;
+    background:transparent;
+    color: var(--ink-soft);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  nav.tabs button.active{ background: var(--ink); color: #fff; }
+
+  main{ padding: 0 22px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .card{
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+  }
+  .card + .card{ margin-top:16px; }
+  .card h3{
+    font-family:'Manrope',sans-serif;
+    font-size:15px;
+    font-weight:700;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .card .hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    line-height:1.5;
+  }
+
+  .banner{
+    display:none;
+    background: var(--accent);
+    color:#fff;
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:18px;
+    text-align:center;
+  }
+  .banner.show{ display:block; }
+  .banner .lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    opacity:.75;
+    margin-bottom:4px;
+  }
+  .banner .name{
+    font-family:'Manrope',sans-serif;
+    font-weight:800;
+    font-size:24px;
+    line-height:1.2;
+  }
+
+  .field{ margin-bottom:16px; }
+  .field:last-of-type{ margin-bottom:0; }
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color: var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input, .field textarea, .field select{
+    width:100%;
+    border: 1px solid var(--line);
+    border-radius:9px;
+    background: var(--bg);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    color: var(--ink);
+    padding: 11px 12px;
+    outline:none;
+    transition: border-color .15s;
+  }
+  .field select{ appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%2371717a'/></svg>"); background-repeat:no-repeat; background-position:right 14px center; }
+  .field input:focus, .field textarea:focus, .field select:focus{
+    border-color: var(--accent);
+    background: #fff;
+  }
+  .field textarea{ resize:vertical; min-height:64px; line-height:1.5; }
+  .field .empty-hint{
+    font-size:11.5px;
+    color: var(--danger);
+    margin-top:6px;
+  }
+
+  .check-inline{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:600;
+    color: var(--ink);
+    cursor:pointer;
+  }
+  .check-inline input{ width:18px; height:18px; accent-color: var(--accent); cursor:pointer; }
+  .row3{ display:flex; gap:10px; margin-top:12px; }
+  .row3 .field{ flex:1; margin-bottom:0; }
+  .row3 input{ text-align:center; }
+
+  .status-btns{ display:flex; gap:8px; margin-top:10px; }
+  .status-btn{
+    flex:1;
+    padding:10px 6px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background: var(--bg);
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:12.5px;
+    cursor:pointer;
+    color: var(--ink-soft);
+  }
+  .status-btn.sakit{ border-color:#d9a441; color:#8a6a1f; }
+  .status-btn.ijin{ border-color:#5b7fa6; color:#3d5a78; }
+  .status-btn.alpa{ border-color: var(--danger); color: var(--danger); }
+  .status-btn:active{ opacity:.8; }
+
+  input[type="file"]{
+    width:100%;
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    color: var(--ink-soft);
+    padding:8px 0;
+  }
+
+  .btn-primary{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background: var(--ink);
+    color: #fff;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    margin-top:18px;
+  }
+  .btn-primary:active{ opacity:.85; }
+  .btn-ghost{
+    width:100%;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background: var(--surface);
+    color: var(--ink-soft);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+
+  .add-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .add-row input{
+    flex:1;
+    border: 1px solid var(--line);
+    border-radius:9px;
+    background: var(--bg);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding: 10px 12px;
+    outline:none;
+  }
+  .add-row input:focus{ border-color: var(--accent); background:#fff; }
+  .add-row button{
+    padding: 0 16px;
+    border:none;
+    border-radius:9px;
+    background: var(--ink);
+    color:#fff;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .chip-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .chip-list li{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: var(--bg);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:10px 12px;
+    font-size:14px;
+  }
+  .chip-list button{
+    border:none;
+    background:none;
+    color: var(--danger);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    padding:2px 6px;
+  }
+  .chip-list .empty-row{
+    color: var(--ink-faint);
+    font-size:13px;
+    padding:8px 2px;
+  }
+
+  .search{ margin-bottom:16px; }
+  .search input{
+    width:100%;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background: var(--surface);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    outline:none;
+  }
+  .search input:focus{ border-color: var(--accent); }
+
+  .empty{ text-align:center; padding:60px 10px; color: var(--ink-faint); }
+  .empty .mark{
+    display:block;
+    font-family:'Manrope',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color: var(--ink-soft);
+    margin-bottom:6px;
+  }
+
+  .entry{
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius:10px;
+    padding:16px 16px 14px;
+    margin-bottom:12px;
+  }
+  .entry .top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .entry .date{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color: var(--accent);
+    background: var(--accent-tint);
+    padding:3px 8px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .entry h3{
+    font-family:'Manrope',sans-serif;
+    font-size:15.5px;
+    font-weight:700;
+    margin: 0 0 2px;
+    color: var(--ink);
+  }
+  .entry .sub{ font-size:12px; color: var(--ink-soft); margin-bottom:10px; }
+  .entry .kv{ margin-bottom:10px; }
+  .entry .kv .k{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color: var(--ink-faint);
+    margin-bottom:2px;
+  }
+  .entry .kv .v{
+    font-size:13.5px;
+    line-height:1.5;
+    color:#3f3f42;
+    white-space:pre-wrap;
+  }
+  .entry .actions{
+    display:flex;
+    gap:8px;
+    border-top:1px solid var(--line);
+    padding-top:10px;
+    margin-top:4px;
+  }
+  .entry .actions button{
+    border:none;
+    background: var(--bg);
+    border-radius:7px;
+    padding:6px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .entry .actions .edit{ color: var(--ink-soft); }
+  .entry .actions .del{ color: var(--danger); }
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: #fff;
+    padding:10px 18px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0;
+    transition: all .25s ease;
+    pointer-events:none;
+    z-index:50;
+    max-width:90%;
+    text-align:center;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  .footer-note{
+    text-align:center;
+    font-size:11px;
+    color: var(--ink-faint);
+    margin-top:24px;
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="configWarning" style="display:none; background:#b3523f; color:#fff; padding:12px 18px; font-size:12.5px; line-height:1.5; text-align:center;">
+    ⚠️ Supabase belum dikonfigurasi. Buka kode sumber (index.html), cari <code>SUPABASE_URL</code> dan <code>SUPABASE_ANON_KEY</code> di bagian atas &lt;script&gt;, lalu isi dengan data project Supabase Anda.
+  </div>
+
+  <!-- ===================== LAYAR LOGIN ===================== -->
+  <div id="loginScreen">
+    <header>
+      <div class="eyebrow">Buku Catatan Digital</div>
+      <h1>Jurnal Mengajar</h1>
+      <p>Masuk memakai NIP untuk mulai mencatat jurnal</p>
+    </header>
+    <main>
+      <div id="loginGuruBox">
+        <div class="card">
+          <h3>Masuk sebagai Guru</h3>
+          <p class="hint">Masukkan NIP Anda yang sudah terdaftar.</p>
+          <div class="field">
+            <label>NIP</label>
+            <input type="text" id="loginNip" inputmode="numeric" placeholder="Masukkan NIP Anda">
+          </div>
+          <button class="btn-primary" onclick="loginAsGuru()">Masuk</button>
+          <button class="btn-ghost" onclick="showRegisterBox()">Belum terdaftar? Daftar sebagai guru baru</button>
+        </div>
+      </div>
+
+      <div id="registerGuruBox" style="display:none;">
+        <div class="card">
+          <h3>Daftar Guru Baru</h3>
+          <p class="hint">Isi data Anda sekali saja. Setelah terdaftar, cukup masuk memakai NIP.</p>
+          <div class="field">
+            <label>Nama Guru</label>
+            <input type="text" id="regNama" placeholder="Nama lengkap">
+          </div>
+          <div class="field">
+            <label>Mata Pelajaran yang Diampu</label>
+            <input type="text" id="regMapel" placeholder="mis. IPA">
+          </div>
+          <div class="field">
+            <label>NIP</label>
+            <input type="text" id="regNip" inputmode="numeric" placeholder="Nomor Induk Pegawai">
+          </div>
+          <button class="btn-primary" onclick="registerGuru()">Daftar & Masuk</button>
+          <button class="btn-ghost" onclick="showLoginBox()">Sudah terdaftar? Kembali ke Masuk</button>
+        </div>
+      </div>
+
+      <div id="loginAdminBox" style="display:none; margin-top:16px;">
+        <div class="card">
+          <h3>Masuk sebagai Admin</h3>
+          <div class="field">
+            <label>PIN Admin</label>
+            <input type="password" id="loginAdminPin" inputmode="numeric" placeholder="PIN Admin">
+          </div>
+          <button class="btn-primary" onclick="loginAsAdmin()">Masuk sebagai Admin</button>
+          <button class="btn-ghost" onclick="hideAdminBox()">Batal</button>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:22px;">
+        <button id="adminToggleBtn" onclick="showAdminBox()" style="border:none; background:none; color:var(--ink-faint); font-size:12px; text-decoration:underline; cursor:pointer;">Admin</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================== LAYAR APLIKASI ===================== -->
+  <div id="appScreen" style="display:none;">
+  <header>
+    <div class="eyebrow">Buku Catatan Digital</div>
+    <h1>Jurnal Mengajar</h1>
+    <div class="stats">
+      <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Total catatan</div></div>
+      <div class="stat"><div class="num" id="statWeek">0</div><div class="lbl">Minggu ini</div></div>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <span id="sessionLabel" style="font-size:12px; color:var(--ink-soft); opacity:.85;"></span>
+      <button onclick="logout()" style="margin-left:8px; border:none; background:none; color:var(--accent); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer;">Keluar</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button id="tabWrite" class="active" onclick="switchView('write')">Tulis</button>
+    <button id="tabHist" onclick="switchView('hist')">Riwayat</button>
+    <button id="tabSettings" onclick="switchView('settings')" style="display:none;">Pengaturan</button>
+  </nav>
+
+  <main>
+    <section id="viewWrite" class="view active">
+      <div class="banner" id="guruBanner">
+        <div class="lbl">Mengisi jurnal sebagai</div>
+        <div class="name" id="guruBannerName">—</div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label>Nama Guru</label>
+          <select id="fGuru" onchange="onGuruChange()"></select>
+          <div class="empty-hint" id="guruEmptyHint" style="display:none;">Belum ada data guru. Tambahkan dulu di menu Pengaturan.</div>
+        </div>
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="fTanggal">
+        </div>
+        <div class="field">
+          <label>Kelas</label>
+          <select id="fKelas"></select>
+          <div class="empty-hint" id="kelasEmptyHint" style="display:none;">Belum ada data kelas. Tambahkan dulu di menu Pengaturan.</div>
+        </div>
+        <div class="field">
+          <label>Jam Ke</label>
+          <select id="fJam"></select>
+          <div class="empty-hint" id="jamEmptyHint" style="display:none;">Belum ada data jam mengajar. Tambahkan dulu di menu Pengaturan.</div>
+        </div>
+        <div class="field">
+          <label>Materi</label>
+          <input type="text" id="fMateri" placeholder="mis. Sistem Pencernaan">
+        </div>
+        <div class="field">
+          <label>1. Tuliskan pengalaman/hal-hal baik selama pembelajaran</label>
+          <textarea id="fRefleksi1" placeholder="Pengalaman atau hal baik yang terjadi selama pembelajaran"></textarea>
+        </div>
+        <div class="field">
+          <label>2. Tuliskan hal-hal yang belum baik/kendala dihadapi selama pembelajaran</label>
+          <textarea id="fRefleksi2" placeholder="Hal yang belum baik atau kendala selama pembelajaran"></textarea>
+        </div>
+        <div class="field">
+          <label>3. Tindak lanjut yang akan dilaksanakan untuk perbaikan pembelajaran</label>
+          <textarea id="fRefleksi3" placeholder="Rencana tindak lanjut untuk perbaikan pembelajaran"></textarea>
+        </div>
+        <div class="field">
+          <label>Kehadiran Siswa</label>
+          <label class="check-inline">
+            <input type="checkbox" id="fHadirSemua" checked onchange="toggleHadirSemua()">
+            Hadir Semua
+          </label>
+          <div id="absenDetail" style="display:none; margin-top:14px;">
+            <div class="field">
+              <label>Nama Siswa</label>
+              <input type="text" id="fSiswaNama" placeholder="Ketik nama siswa, lalu pilih status">
+            </div>
+            <div class="status-btns">
+              <button type="button" class="status-btn sakit" onclick="addSiswa('Sakit')">Sakit</button>
+              <button type="button" class="status-btn ijin" onclick="addSiswa('Ijin')">Ijin</button>
+              <button type="button" class="status-btn alpa" onclick="addSiswa('Alpa')">Alpa</button>
+            </div>
+            <ul class="chip-list" id="siswaListUI" style="margin-top:12px;"></ul>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveEntry()" id="saveBtn">Simpan Catatan</button>
+      <button class="btn-ghost" id="cancelEditBtn" onclick="resetForm()" style="display:none;">Batalkan Ubah</button>
+    </section>
+
+    <section id="viewHist" class="view">
+      <div class="card" style="margin-bottom:18px;">
+        <h3>Simpan Jurnal (PDF)</h3>
+        <p class="hint">Pilih nama guru dan tanggal, lampiran jurnal ukuran A4 siap diunduh.</p>
+        <div class="field">
+          <label>Nama Guru</label>
+          <select id="pdfGuru"></select>
+        </div>
+        <div class="field">
+          <label>Tanggal Jurnal</label>
+          <input type="date" id="pdfTanggal">
+        </div>
+        <button class="btn-primary" style="margin-top:14px;" onclick="generateJournalPDF()">Buat & Unduh PDF</button>
+      </div>
+
+      <div class="search">
+        <input type="text" id="searchBox" placeholder="Cari guru, kelas, mapel, atau materi..." oninput="renderEntries()">
+      </div>
+      <div id="entryList"></div>
+      <button class="btn-ghost" onclick="exportCSV()">Unduh sebagai CSV</button>
+    </section>
+
+    <section id="viewSettings" class="view">
+      <div class="card">
+        <h3>PIN Admin</h3>
+        <p class="hint">PIN ini dipakai untuk masuk sebagai Admin lewat tombol "Admin" di layar Masuk. Segera ganti dari PIN bawaan.</p>
+        <div class="field">
+          <label>PIN Admin Baru</label>
+          <input type="password" id="adminPinInput" inputmode="numeric" placeholder="Masukkan PIN baru">
+        </div>
+        <button class="btn-ghost" style="margin-top:0;" onclick="saveAdminPin()">Simpan PIN Admin</button>
+      </div>
+      <div class="card">
+        <h3>Wilayah (Kecamatan)</h3>
+        <p class="hint">Dipakai pada baris tanda tangan lampiran PDF, contoh: "Negara, 18 Juli 2026".</p>
+        <div class="field">
+          <label>Nama Kecamatan</label>
+          <input type="text" id="wilayahInput" placeholder="mis. Negara">
+        </div>
+        <button class="btn-ghost" style="margin-top:0;" onclick="saveWilayah()">Simpan Wilayah</button>
+      </div>
+      <div class="card">
+        <h3>Data Kepala Sekolah</h3>
+        <p class="hint">Dipakai pada kolom tanda tangan "Mengetahui" di sebelah kiri lampiran PDF.</p>
+        <div class="field">
+          <label>Nama Kepala Sekolah</label>
+          <input type="text" id="kepsekNamaInput" placeholder="Nama lengkap kepala sekolah">
+        </div>
+        <div class="field">
+          <label>NIP Kepala Sekolah</label>
+          <input type="text" id="kepsekNipInput" placeholder="Nomor Induk Pegawai">
+        </div>
+        <button class="btn-ghost" style="margin-top:0;" onclick="saveKepsek()">Simpan Data Kepala Sekolah</button>
+      </div>
+      <div class="card">
+        <h3>Kop Jurnal (Gambar Header)</h3>
+        <p class="hint">Upload gambar memanjang berisi logo dinas, logo sekolah, dan teks kop (termasuk aksara Bali). Disarankan sekitar 2600×300 px, format PNG/JPG, di bawah 500KB. Jika belum diupload, kop PDF otomatis memakai teks biasa.</p>
+        <input type="file" id="headerImageInput" accept="image/png,image/jpeg" onchange="handleHeaderImageUpload(event)">
+        <div id="headerImagePreviewWrap" style="display:none; margin-top:12px;">
+          <img id="headerImagePreview" style="width:100%; display:block; border:1px solid var(--line); border-radius:8px;">
+          <button class="btn-ghost" onclick="removeHeaderImage()">Hapus Gambar Kop</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Data Guru</h3>
+        <p class="hint">Nama, mata pelajaran, dan NIP guru dipakai untuk pilihan di form Tulis Catatan, dan untuk kolom tanda tangan pada lampiran PDF.</p>
+        <div class="field">
+          <label>Nama Guru</label>
+          <input type="text" id="newGuru" placeholder="Nama guru baru">
+        </div>
+        <div class="field">
+          <label>Mata Pelajaran yang Diampu</label>
+          <input type="text" id="newGuruMapel" placeholder="mis. IPA">
+        </div>
+        <div class="field">
+          <label>NIP</label>
+          <input type="text" id="newGuruNip" placeholder="Nomor Induk Pegawai">
+        </div>
+        <button class="btn-ghost" style="margin-top:0;" onclick="addGuru()">Tambah Guru</button>
+        <ul class="chip-list" id="guruListUI" style="margin-top:16px;"></ul>
+      </div>
+      <div class="card">
+        <h3>Data Kelas</h3>
+        <p class="hint">Nama kelas yang ditambahkan akan muncul sebagai pilihan di form Tulis Catatan.</p>
+        <div class="add-row">
+          <input type="text" id="newKelas" placeholder="mis. VII A">
+          <button onclick="addKelas()">Tambah</button>
+        </div>
+        <ul class="chip-list" id="kelasListUI"></ul>
+      </div>
+      <div class="card">
+        <h3>Data Jam Mengajar</h3>
+        <p class="hint">Tentukan kategori jam pelajaran beserta jam aslinya. Akan muncul sebagai pilihan di form Tulis Catatan.</p>
+        <div class="field">
+          <label>Kategori (mis. Jam ke 1-3)</label>
+          <input type="text" id="newJamLabel" placeholder="Jam ke 1-3">
+        </div>
+        <div class="field">
+          <label>Jam Asli</label>
+          <input type="text" id="newJamWaktu" placeholder="07:00 - 09:15">
+        </div>
+        <button class="btn-ghost" style="margin-top:0;" onclick="addJam()">Tambah Jam</button>
+        <ul class="chip-list" id="jamListUI" style="margin-top:16px;"></ul>
+      </div>
+    </section>
+
+    <p class="footer-note">Data tersimpan otomatis di database dan dapat diakses dari perangkat mana pun.</p>
+  </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   KONFIGURASI SUPABASE — WAJIB DIISI SEBELUM DIPAKAI
+   1. Buka project Supabase Anda → Settings → API
+   2. Salin "Project URL" ke SUPABASE_URL
+   3. Salin "anon public" key ke SUPABASE_ANON_KEY
+   ===================================================================== */
+const SUPABASE_URL = ""; // GANTI dengan Project URL Anda
+const SUPABASE_ANON_KEY = ""; // GANTI dengan anon public key Anda
+const HEADER_BUCKET = 'header-images';
+
+let sb = null;
+let supabaseReady = false;
+(function initSupabase(){
+  const urlOk = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('xxxx');
+  const keyOk = SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('xxxx');
+  if(urlOk && keyOk && window.supabase){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseReady = true;
+  }
+})();
+function requireSupabase(){
+  if(!supabaseReady){
+    showToast('Supabase belum dikonfigurasi. Edit SUPABASE_URL & SUPABASE_ANON_KEY di kode.');
+    return false;
+  }
+  return true;
+}
+function showConfigWarning(){
+  const el = document.getElementById('configWarning');
+  if(el) el.style.display = 'block';
+}
+
+let entries = [];
+let guruList = [];
+let kelasList = [];
+let jamList = [];
+let absenSiswaList = [];
+let wilayah = '';
+let kepsek = { nama: '', nip: '' };
+let adminPin = '123456';
+let headerImage = null;
+let editingId = null;
+let session = null; // { type: 'guru', nip, nama, mapel } atau { type: 'admin' }
+
+// ---- Sesi Login ----
+function loadSession(){
+  try{
+    const raw = localStorage.getItem('jm-session');
+    session = raw ? JSON.parse(raw) : null;
+  }catch(e){ session = null; }
+}
+function saveSession(){
+  try{ localStorage.setItem('jm-session', JSON.stringify(session)); }
+  catch(e){ /* abaikan */ }
+}
+function logout(){
+  session = null;
+  try{ localStorage.removeItem('jm-session'); }catch(e){}
+  document.getElementById('loginNip').value = '';
+  document.getElementById('loginAdminPin').value = '';
+  showLoginBox();
+  hideAdminBox();
+  renderScreens();
+}
+
+function showRegisterBox(){
+  document.getElementById('loginGuruBox').style.display = 'none';
+  document.getElementById('registerGuruBox').style.display = 'block';
+}
+function showLoginBox(){
+  document.getElementById('loginGuruBox').style.display = 'block';
+  document.getElementById('registerGuruBox').style.display = 'none';
+}
+function showAdminBox(){
+  document.getElementById('loginAdminBox').style.display = 'block';
+  document.getElementById('adminToggleBtn').style.display = 'none';
+}
+function hideAdminBox(){
+  document.getElementById('loginAdminBox').style.display = 'none';
+  document.getElementById('adminToggleBtn').style.display = 'inline';
+}
+
+async function loginAsGuru(){
+  const nip = document.getElementById('loginNip').value.trim();
+  if(!nip){ showToast('Masukkan NIP terlebih dahulu.'); return; }
+  if(!requireSupabase()) return;
+  const { data, error } = await sb.from('guru').select('*').eq('nip', nip).maybeSingle();
+  if(error){ console.error(error); showToast('Gagal memeriksa NIP.'); return; }
+  if(!data){
+    showToast('NIP tidak ditemukan. Silakan daftar sebagai guru baru.');
+    return;
+  }
+  session = { type:'guru', id: data.id, nip: data.nip, nama: data.nama, mapel: data.mapel || '' };
+  saveSession();
+  await loadAll();
+}
+
+async function registerGuru(){
+  const nama = document.getElementById('regNama').value.trim();
+  const mapel = document.getElementById('regMapel').value.trim();
+  const nip = document.getElementById('regNip').value.trim();
+  if(!nama || !nip){ showToast('Nama dan NIP wajib diisi.'); return; }
+  if(!requireSupabase()) return;
+
+  const { data: existing } = await sb.from('guru').select('id').eq('nip', nip).maybeSingle();
+  if(existing){ showToast('NIP ini sudah terdaftar. Silakan masuk lewat menu Masuk.'); return; }
+
+  const { data, error } = await sb.from('guru').insert({ nama, mapel, nip }).select().single();
+  if(error){ console.error(error); showToast('Gagal mendaftar. Coba lagi.'); return; }
+
+  session = { type:'guru', id: data.id, nip: data.nip, nama: data.nama, mapel: data.mapel || '' };
+  saveSession();
+  showToast('Pendaftaran berhasil!');
+  await loadAll();
+}
+
+async function loginAsAdmin(){
+  const pin = document.getElementById('loginAdminPin').value.trim();
+  if(!pin){ showToast('Masukkan PIN Admin.'); return; }
+  if(!requireSupabase()) return;
+  const { data, error } = await sb.from('pengaturan').select('admin_pin').eq('id', 1).maybeSingle();
+  if(error){ console.error(error); showToast('Gagal memeriksa PIN.'); return; }
+  const correctPin = (data && data.admin_pin) ? data.admin_pin : '123456';
+  if(pin !== correctPin){
+    showToast('PIN Admin salah.');
+    return;
+  }
+  session = { type:'admin' };
+  saveSession();
+  await loadAll();
+}
+
+function renderScreens(){
+  const isLoggedIn = !!session;
+  document.getElementById('loginScreen').style.display = isLoggedIn ? 'none' : 'block';
+  document.getElementById('appScreen').style.display = isLoggedIn ? 'block' : 'none';
+  if(!isLoggedIn) return;
+
+  const isAdmin = session.type === 'admin';
+  document.getElementById('tabSettings').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('sessionLabel').textContent = isAdmin
+    ? 'Masuk sebagai Admin'
+    : `Masuk sebagai ${session.nama}`;
+
+  if(!isAdmin){
+    // Guru: kunci Nama Guru di form Tulis ke identitas sendiri
+    const guruField = document.getElementById('fGuru');
+    if(guruField){
+      guruField.value = session.nama;
+      guruField.disabled = true;
+    }
+    const pdfGuruField = document.getElementById('pdfGuru');
+    if(pdfGuruField){
+      pdfGuruField.value = session.nama;
+      pdfGuruField.disabled = true;
+    }
+    onGuruChange();
+  }else{
+    const guruField = document.getElementById('fGuru');
+    if(guruField) guruField.disabled = false;
+    const pdfGuruField = document.getElementById('pdfGuru');
+    if(pdfGuruField) pdfGuruField.disabled = false;
+  }
+}
+
+async function loadAll(){
+  loadSession();
+  renderScreens();
+  if(!session){
+    return;
+  }
+
+  if(!supabaseReady){
+    showConfigWarning();
+    renderGuruOptions(); renderKelasOptions(); renderJamOptions();
+    renderGuruSettingsList(); renderKelasSettingsList(); renderJamSettingsList();
+    renderHeaderImagePreview();
+    renderEntries(); updateStats(); onGuruChange();
+    return;
+  }
+  try{
+    const [guruRes, kelasRes, jamRes, entryRes, pengRes] = await Promise.all([
+      sb.from('guru').select('*').order('nama'),
+      sb.from('kelas').select('*').order('nama'),
+      sb.from('jam_mengajar').select('*').order('created_at'),
+      sb.from('jurnal_entries').select('*').order('created_at'),
+      sb.from('pengaturan').select('*').eq('id', 1).maybeSingle()
+    ]);
+
+    guruList = (guruRes.data || []).map(g => ({ id: g.id, nama: g.nama, mapel: g.mapel || '', nip: g.nip || '' }));
+    kelasList = (kelasRes.data || []).map(k => ({ id: k.id, nama: k.nama }));
+    jamList = (jamRes.data || []).map(j => ({ id: j.id, label: j.label, waktu: j.waktu || '' }));
+
+    let allEntries = (entryRes.data || []).map(e => ({
+      id: e.id,
+      guru: e.guru,
+      tanggal: e.tanggal,
+      kelas: e.kelas,
+      jam: e.jam,
+      materi: e.materi,
+      refleksi1: e.refleksi1 || '',
+      refleksi2: e.refleksi2 || '',
+      refleksi3: e.refleksi3 || '',
+      absen: e.absen || { hadirSemua: true, list: [] },
+      createdAt: e.created_at ? new Date(e.created_at).getTime() : Date.now()
+    }));
+
+    // Guru hanya melihat catatannya sendiri; Admin melihat semua
+    entries = (session.type === 'admin') ? allEntries : allEntries.filter(e => e.guru === session.nama);
+
+    if(pengRes.data){
+      wilayah = pengRes.data.wilayah || '';
+      kepsek = { nama: pengRes.data.kepsek_nama || '', nip: pengRes.data.kepsek_nip || '' };
+      headerImage = pengRes.data.header_image_url ? { url: pengRes.data.header_image_url } : null;
+      adminPin = pengRes.data.admin_pin || '123456';
+    }
+  }catch(err){
+    console.error(err);
+    showToast('Gagal memuat data dari Supabase. Cek koneksi/konfigurasi.');
+  }
+
+  document.getElementById('wilayahInput').value = wilayah;
+  document.getElementById('kepsekNamaInput').value = kepsek.nama || '';
+  document.getElementById('kepsekNipInput').value = kepsek.nip || '';
+  const adminPinInputEl = document.getElementById('adminPinInput');
+  if(adminPinInputEl) adminPinInputEl.value = '';
+  renderHeaderImagePreview();
+
+  renderGuruOptions();
+  renderKelasOptions();
+  renderJamOptions();
+  renderGuruSettingsList();
+  renderKelasSettingsList();
+  renderJamSettingsList();
+  renderEntries();
+  updateStats();
+  renderScreens();
+}
+
+function switchView(name){
+  ['write','hist','settings'].forEach(v=>{
+    document.getElementById('view'+capitalize(v)).classList.toggle('active', v===name);
+    document.getElementById('tab'+capitalize(v)).classList.toggle('active', v===name);
+  });
+  if(name==='hist') renderEntries();
+}
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+document.getElementById('fTanggal').value = todayStr();
+document.getElementById('pdfTanggal').value = todayStr();
+
+// ---- Wilayah & Kepala Sekolah ----
+async function saveAdminPin(){
+  const pin = document.getElementById('adminPinInput').value.trim();
+  if(!pin || pin.length < 4){ showToast('PIN minimal 4 karakter.'); return; }
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('pengaturan').update({ admin_pin: pin }).eq('id', 1);
+  if(error){ console.error(error); showToast('Gagal menyimpan PIN Admin.'); return; }
+  adminPin = pin;
+  document.getElementById('adminPinInput').value = '';
+  showToast('PIN Admin berhasil diganti.');
+}
+
+async function saveWilayah(){
+  wilayah = document.getElementById('wilayahInput').value.trim();
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('pengaturan').update({ wilayah }).eq('id', 1);
+  if(error){ console.error(error); showToast('Gagal menyimpan wilayah.'); return; }
+  showToast('Wilayah disimpan.');
+}
+async function saveKepsek(){
+  kepsek = {
+    nama: document.getElementById('kepsekNamaInput').value.trim(),
+    nip: document.getElementById('kepsekNipInput').value.trim()
+  };
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('pengaturan').update({ kepsek_nama: kepsek.nama, kepsek_nip: kepsek.nip }).eq('id', 1);
+  if(error){ console.error(error); showToast('Gagal menyimpan data kepala sekolah.'); return; }
+  showToast('Data kepala sekolah disimpan.');
+}
+
+// ---- Gambar Kop (Supabase Storage) ----
+function renderHeaderImagePreview(){
+  const wrap = document.getElementById('headerImagePreviewWrap');
+  const img = document.getElementById('headerImagePreview');
+  if(headerImage && headerImage.url){
+    img.src = headerImage.url;
+    wrap.style.display = 'block';
+  }else{
+    wrap.style.display = 'none';
+  }
+}
+async function handleHeaderImageUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(!['image/png','image/jpeg'].includes(file.type)){
+    showToast('Format gambar harus PNG atau JPG.');
+    event.target.value = '';
+    return;
+  }
+  if(file.size > 800*1024){
+    showToast('Ukuran file terlalu besar. Gunakan gambar di bawah 500KB.');
+    event.target.value = '';
+    return;
+  }
+  if(!requireSupabase()){ event.target.value = ''; return; }
+
+  showToast('Mengupload gambar...');
+  const ext = file.type === 'image/png' ? 'png' : 'jpg';
+  const path = `kop-${Date.now()}.${ext}`;
+  const { error: upErr } = await sb.storage.from(HEADER_BUCKET).upload(path, file, { upsert: true, contentType: file.type });
+  if(upErr){
+    console.error(upErr);
+    showToast('Gagal mengupload gambar. Pastikan bucket "header-images" sudah dibuat & public.');
+    event.target.value = '';
+    return;
+  }
+  const { data: urlData } = sb.storage.from(HEADER_BUCKET).getPublicUrl(path);
+  const publicUrl = urlData.publicUrl;
+
+  const { error: updErr } = await sb.from('pengaturan').update({ header_image_url: publicUrl }).eq('id', 1);
+  if(updErr){
+    console.error(updErr);
+    showToast('Gagal menyimpan URL gambar.');
+    event.target.value = '';
+    return;
+  }
+
+  headerImage = { url: publicUrl };
+  renderHeaderImagePreview();
+  showToast('Gambar kop berhasil disimpan.');
+  event.target.value = '';
+}
+async function removeHeaderImage(){
+  if(!confirm('Hapus gambar kop dan kembali memakai kop teks otomatis?')) return;
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('pengaturan').update({ header_image_url: null }).eq('id', 1);
+  if(error){ console.error(error); showToast('Gagal menghapus gambar kop.'); return; }
+  headerImage = null;
+  renderHeaderImagePreview();
+  showToast('Gambar kop dihapus.');
+}
+
+// ---- Kehadiran ----
+function toggleHadirSemua(){
+  const checked = document.getElementById('fHadirSemua').checked;
+  document.getElementById('absenDetail').style.display = checked ? 'none' : 'block';
+  if(checked){
+    absenSiswaList = [];
+    renderSiswaList();
+  }
+}
+function addSiswa(status){
+  const input = document.getElementById('fSiswaNama');
+  const nama = input.value.trim();
+  if(!nama){ showToast('Isi nama siswa terlebih dahulu.'); return; }
+  absenSiswaList.push({nama, status});
+  input.value = '';
+  input.focus();
+  renderSiswaList();
+}
+function removeSiswa(i){
+  absenSiswaList.splice(i,1);
+  renderSiswaList();
+}
+function renderSiswaList(){
+  const ul = document.getElementById('siswaListUI');
+  if(!ul) return;
+  ul.innerHTML = absenSiswaList.length
+    ? absenSiswaList.map((s,i)=>`<li><span>${escapeHtml(s.nama)} — ${escapeHtml(s.status)}</span><button onclick="removeSiswa(${i})">Hapus</button></li>`).join('')
+    : '<div class="empty-row">Belum ada siswa ditambahkan.</div>';
+}
+function absenText(e){
+  if(!e.absen || e.absen.hadirSemua) return 'Hadir Semua';
+  const list = e.absen.list || [];
+  const sakit = list.filter(s=>s.status==='Sakit').map(s=>s.nama);
+  const ijin = list.filter(s=>s.status==='Ijin').map(s=>s.nama);
+  const alpa = list.filter(s=>s.status==='Alpa').map(s=>s.nama);
+  const parts = [];
+  if(sakit.length) parts.push(`Sakit: ${sakit.join(', ')}`);
+  if(ijin.length) parts.push(`Ijin: ${ijin.join(', ')}`);
+  if(alpa.length) parts.push(`Alpa: ${alpa.join(', ')}`);
+  return parts.length ? parts.join(' | ') : 'Hadir Semua';
+}
+
+// ---- Guru, Kelas, Jam (master data) ----
+function renderGuruOptions(){
+  const options = guruList.length
+    ? guruList.map(g=>`<option value="${escapeHtml(g.nama)}">${escapeHtml(g.nama)}</option>`).join('')
+    : '<option value="">— Belum ada data —</option>';
+  const names = guruList.map(g=>g.nama);
+
+  const sel = document.getElementById('fGuru');
+  const current = sel.value;
+  sel.innerHTML = options;
+  document.getElementById('guruEmptyHint').style.display = guruList.length ? 'none' : 'block';
+  if(names.includes(current)) sel.value = current;
+
+  const pdfSel = document.getElementById('pdfGuru');
+  if(pdfSel){
+    const pdfCurrent = pdfSel.value;
+    pdfSel.innerHTML = options;
+    if(names.includes(pdfCurrent)) pdfSel.value = pdfCurrent;
+  }
+}
+function renderKelasOptions(){
+  const sel = document.getElementById('fKelas');
+  const current = sel.value;
+  sel.innerHTML = kelasList.length
+    ? kelasList.map(k=>`<option value="${escapeHtml(k.nama)}">${escapeHtml(k.nama)}</option>`).join('')
+    : '<option value="">— Belum ada data —</option>';
+  document.getElementById('kelasEmptyHint').style.display = kelasList.length ? 'none' : 'block';
+  if(kelasList.some(k=>k.nama===current)) sel.value = current;
+}
+function jamDisplay(j){ return j.waktu ? `${j.label} (${j.waktu})` : j.label; }
+function renderJamOptions(){
+  const sel = document.getElementById('fJam');
+  const current = sel.value;
+  sel.innerHTML = jamList.length
+    ? jamList.map(j=>`<option value="${escapeHtml(j.label)}">${escapeHtml(jamDisplay(j))}</option>`).join('')
+    : '<option value="">— Belum ada data —</option>';
+  document.getElementById('jamEmptyHint').style.display = jamList.length ? 'none' : 'block';
+  if(jamList.some(j=>j.label===current)) sel.value = current;
+}
+function onGuruChange(){
+  const val = document.getElementById('fGuru').value;
+  const banner = document.getElementById('guruBanner');
+  const name = document.getElementById('guruBannerName');
+  if(val){
+    name.textContent = val;
+    banner.classList.add('show');
+  }else{
+    banner.classList.remove('show');
+  }
+}
+
+function renderGuruSettingsList(){
+  const ul = document.getElementById('guruListUI');
+  ul.innerHTML = guruList.length
+    ? guruList.map(g=>`<li><span>${escapeHtml(g.nama)}${g.mapel ? ' — '+escapeHtml(g.mapel) : ''}${g.nip ? ' · NIP '+escapeHtml(g.nip) : ''}</span><button onclick="removeGuru('${g.id}')">Hapus</button></li>`).join('')
+    : '<div class="empty-row">Belum ada nama guru ditambahkan.</div>';
+}
+function renderKelasSettingsList(){
+  const ul = document.getElementById('kelasListUI');
+  ul.innerHTML = kelasList.length
+    ? kelasList.map(k=>`<li><span>${escapeHtml(k.nama)}</span><button onclick="removeKelas('${k.id}')">Hapus</button></li>`).join('')
+    : '<div class="empty-row">Belum ada nama kelas ditambahkan.</div>';
+}
+function renderJamSettingsList(){
+  const ul = document.getElementById('jamListUI');
+  ul.innerHTML = jamList.length
+    ? jamList.map(j=>`<li><span>${escapeHtml(jamDisplay(j))}</span><button onclick="removeJam('${j.id}')">Hapus</button></li>`).join('')
+    : '<div class="empty-row">Belum ada jam mengajar ditambahkan.</div>';
+}
+
+async function addGuru(){
+  const input = document.getElementById('newGuru');
+  const mapelInput = document.getElementById('newGuruMapel');
+  const nipInput = document.getElementById('newGuruNip');
+  const val = input.value.trim();
+  const mapel = mapelInput.value.trim();
+  const nip = nipInput.value.trim();
+  if(!val){ showToast('Isi nama guru terlebih dahulu.'); return; }
+  if(guruList.some(g=>g.nama===val)){ showToast('Nama guru sudah ada.'); return; }
+  if(!requireSupabase()) return;
+  const { data, error } = await sb.from('guru').insert({ nama: val, mapel, nip }).select().single();
+  if(error){ console.error(error); showToast('Gagal menambah guru.'); return; }
+  guruList.push({ id: data.id, nama: data.nama, mapel: data.mapel || '', nip: data.nip || '' });
+  input.value = ''; mapelInput.value = ''; nipInput.value = '';
+  renderGuruSettingsList();
+  renderGuruOptions();
+  onGuruChange();
+  showToast('Guru ditambahkan.');
+}
+async function removeGuru(id){
+  if(!confirm('Hapus nama guru ini dari daftar?')) return;
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('guru').delete().eq('id', id);
+  if(error){ console.error(error); showToast('Gagal menghapus guru.'); return; }
+  guruList = guruList.filter(g=>g.id!==id);
+  renderGuruSettingsList();
+  renderGuruOptions();
+  onGuruChange();
+}
+async function addKelas(){
+  const input = document.getElementById('newKelas');
+  const val = input.value.trim();
+  if(!val) return;
+  if(kelasList.some(k=>k.nama===val)){ showToast('Nama kelas sudah ada.'); return; }
+  if(!requireSupabase()) return;
+  const { data, error } = await sb.from('kelas').insert({ nama: val }).select().single();
+  if(error){ console.error(error); showToast('Gagal menambah kelas.'); return; }
+  kelasList.push({ id: data.id, nama: data.nama });
+  input.value = '';
+  renderKelasSettingsList();
+  renderKelasOptions();
+  showToast('Kelas ditambahkan.');
+}
+async function removeKelas(id){
+  if(!confirm('Hapus nama kelas ini dari daftar?')) return;
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('kelas').delete().eq('id', id);
+  if(error){ console.error(error); showToast('Gagal menghapus kelas.'); return; }
+  kelasList = kelasList.filter(k=>k.id!==id);
+  renderKelasSettingsList();
+  renderKelasOptions();
+}
+async function addJam(){
+  const labelInput = document.getElementById('newJamLabel');
+  const waktuInput = document.getElementById('newJamWaktu');
+  const label = labelInput.value.trim();
+  const waktu = waktuInput.value.trim();
+  if(!label){ showToast('Isi kategori jam terlebih dahulu.'); return; }
+  if(jamList.some(j=>j.label===label)){ showToast('Kategori jam sudah ada.'); return; }
+  if(!requireSupabase()) return;
+  const { data, error } = await sb.from('jam_mengajar').insert({ label, waktu }).select().single();
+  if(error){ console.error(error); showToast('Gagal menambah jam mengajar.'); return; }
+  jamList.push({ id: data.id, label: data.label, waktu: data.waktu || '' });
+  labelInput.value = ''; waktuInput.value = '';
+  renderJamSettingsList();
+  renderJamOptions();
+  showToast('Jam mengajar ditambahkan.');
+}
+async function removeJam(id){
+  if(!confirm('Hapus data jam mengajar ini?')) return;
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('jam_mengajar').delete().eq('id', id);
+  if(error){ console.error(error); showToast('Gagal menghapus jam.'); return; }
+  jamList = jamList.filter(j=>j.id!==id);
+  renderJamSettingsList();
+  renderJamOptions();
+}
+
+// ---- Entries (Jurnal) ----
+async function saveEntry(){
+  const guru = document.getElementById('fGuru').value;
+  const tanggal = document.getElementById('fTanggal').value;
+  const kelas = document.getElementById('fKelas').value;
+  const jam = document.getElementById('fJam').value;
+  const materi = document.getElementById('fMateri').value.trim();
+  const refleksi1 = document.getElementById('fRefleksi1').value.trim();
+  const refleksi2 = document.getElementById('fRefleksi2').value.trim();
+  const refleksi3 = document.getElementById('fRefleksi3').value.trim();
+  const hadirSemua = document.getElementById('fHadirSemua').checked;
+  const absen = { hadirSemua, list: hadirSemua ? [] : absenSiswaList.slice() };
+
+  if(!guru || !kelas){
+    showToast('Pilih nama guru dan kelas terlebih dahulu (tambahkan di Pengaturan jika belum ada).');
+    return;
+  }
+  if(!tanggal || !materi){
+    showToast('Mohon isi tanggal dan materi.');
+    return;
+  }
+  if(!requireSupabase()) return;
+
+  const payload = { guru, tanggal, kelas, jam, materi, refleksi1, refleksi2, refleksi3, absen };
+
+  if(editingId){
+    const { error } = await sb.from('jurnal_entries').update(payload).eq('id', editingId);
+    if(error){ console.error(error); showToast('Gagal memperbarui catatan.'); return; }
+    const idx = entries.findIndex(e=>e.id===editingId);
+    if(idx>-1) entries[idx] = {...entries[idx], ...payload};
+    showToast('Catatan diperbarui.');
+  }else{
+    const { data, error } = await sb.from('jurnal_entries').insert(payload).select().single();
+    if(error){ console.error(error); showToast('Gagal menyimpan catatan.'); return; }
+    entries.push({ ...payload, id: data.id, createdAt: new Date(data.created_at).getTime() });
+    showToast('Catatan tersimpan.');
+  }
+
+  resetForm();
+  updateStats();
+  switchView('hist');
+}
+
+function resetForm(){
+  editingId = null;
+  document.getElementById('fTanggal').value = todayStr();
+  document.getElementById('fMateri').value = '';
+  document.getElementById('fRefleksi1').value = '';
+  document.getElementById('fRefleksi2').value = '';
+  document.getElementById('fRefleksi3').value = '';
+  document.getElementById('fHadirSemua').checked = true;
+  absenSiswaList = [];
+  toggleHadirSemua();
+  document.getElementById('saveBtn').textContent = 'Simpan Catatan';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+function editEntry(id){
+  const e = entries.find(x=>x.id===id);
+  if(!e) return;
+  editingId = id;
+  document.getElementById('fGuru').value = e.guru;
+  document.getElementById('fTanggal').value = e.tanggal;
+  document.getElementById('fKelas').value = e.kelas;
+  document.getElementById('fJam').value = e.jam || '';
+  document.getElementById('fMateri').value = e.materi;
+  document.getElementById('fRefleksi1').value = e.refleksi1 || '';
+  document.getElementById('fRefleksi2').value = e.refleksi2 || '';
+  document.getElementById('fRefleksi3').value = e.refleksi3 || '';
+  const absen = e.absen || {hadirSemua:true, list:[]};
+  document.getElementById('fHadirSemua').checked = absen.hadirSemua;
+  absenSiswaList = (absen.list || []).slice();
+  toggleHadirSemua();
+  renderSiswaList();
+  document.getElementById('saveBtn').textContent = 'Perbarui Catatan';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  onGuruChange();
+  switchView('write');
+}
+
+async function deleteEntry(id){
+  if(!confirm('Hapus catatan ini?')) return;
+  if(!requireSupabase()) return;
+  const { error } = await sb.from('jurnal_entries').delete().eq('id', id);
+  if(error){ console.error(error); showToast('Gagal menghapus catatan.'); return; }
+  entries = entries.filter(e=>e.id!==id);
+  renderEntries();
+  updateStats();
+  showToast('Catatan dihapus.');
+}
+
+function formatDate(d){
+  const date = new Date(d + 'T00:00:00');
+  return date.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent = entries.length;
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7*24*60*60*1000);
+  const weekCount = entries.filter(e => new Date(e.tanggal+'T00:00:00') >= weekAgo).length;
+  document.getElementById('statWeek').textContent = weekCount;
+}
+
+function renderEntries(){
+  const list = document.getElementById('entryList');
+  const q = (document.getElementById('searchBox')?.value || '').toLowerCase();
+  let filtered = entries.filter(e =>
+    (e.guru||'').toLowerCase().includes(q) ||
+    (e.kelas||'').toLowerCase().includes(q) ||
+    (e.materi||'').toLowerCase().includes(q)
+  );
+  filtered.sort((a,b)=> b.tanggal.localeCompare(a.tanggal) || b.createdAt-a.createdAt);
+
+  if(filtered.length===0){
+    list.innerHTML = '<div class="empty"><span class="mark">Belum ada catatan</span>Mulai tulis jurnal mengajar pertamamu di tab Tulis.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => `
+    <div class="entry">
+      <div class="top">
+        <div>
+          <h3>${escapeHtml(e.materi)}</h3>
+          <div class="sub">${escapeHtml(e.guru)} · ${escapeHtml(e.kelas)} · Jam ke ${escapeHtml(e.jam||'-')}</div>
+        </div>
+        <span class="date">${formatDate(e.tanggal)}</span>
+      </div>
+      ${e.refleksi1 ? `<div class="kv"><div class="k">1. Pengalaman/Hal Baik</div><div class="v">${escapeHtml(e.refleksi1)}</div></div>` : ''}
+      ${e.refleksi2 ? `<div class="kv"><div class="k">2. Hal Belum Baik/Kendala</div><div class="v">${escapeHtml(e.refleksi2)}</div></div>` : ''}
+      ${e.refleksi3 ? `<div class="kv"><div class="k">3. Tindak Lanjut</div><div class="v">${escapeHtml(e.refleksi3)}</div></div>` : ''}
+      <div class="kv"><div class="k">Kehadiran Siswa</div><div class="v">${escapeHtml(absenText(e))}</div></div>
+      <div class="actions">
+        <button class="edit" onclick="editEntry('${e.id}')">Ubah</button>
+        ${session && session.type === 'admin' ? `<button class="del" onclick="deleteEntry('${e.id}')">Hapus</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function exportCSV(){
+  if(entries.length===0){
+    showToast('Belum ada data untuk diunduh.');
+    return;
+  }
+  const header = ['Tanggal','Guru','Kelas','Jam Ke','Materi','1. Pengalaman/Hal Baik','2. Hal Belum Baik/Kendala','3. Tindak Lanjut','Kehadiran Siswa'];
+  const rows = entries.slice().sort((a,b)=>a.tanggal.localeCompare(b.tanggal)).map(e =>
+    [e.tanggal, e.guru, e.kelas, e.jam, e.materi, e.refleksi1, e.refleksi2, e.refleksi3, absenText(e)]
+      .map(v => `"${String(v||'').replace(/\n/g,' ').replace(/"/g,'""')}"`).join(',')
+  );
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(["\uFEFF"+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'jurnal-mengajar.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadImageAsDataUrl(url){
+  return fetch(url)
+    .then(res => res.blob())
+    .then(blob => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }));
+}
+
+async function generateJournalPDF(){
+  const guruName = document.getElementById('pdfGuru').value;
+  const tanggal = document.getElementById('pdfTanggal').value;
+
+  if(!guruName){
+    showToast('Pilih nama guru terlebih dahulu.');
+    return;
+  }
+  if(!tanggal){
+    showToast('Pilih tanggal jurnal terlebih dahulu.');
+    return;
+  }
+
+  const matched = entries
+    .filter(e => e.guru === guruName && e.tanggal === tanggal)
+    .sort((a,b)=> a.createdAt - b.createdAt);
+
+  if(matched.length === 0){
+    showToast('Tidak ada catatan untuk guru dan tanggal tersebut.');
+    return;
+  }
+
+  const guruData = guruList.find(g => g.nama === guruName) || {nama: guruName, mapel: '', nip: ''};
+
+  let headerImgData = null;
+  if(headerImage && headerImage.url){
+    try{
+      const dataUrl = await loadImageAsDataUrl(headerImage.url);
+      const dims = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({width: img.naturalWidth, height: img.naturalHeight});
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+      headerImgData = { dataUrl, width: dims.width, height: dims.height };
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const marginLeft = 16;
+  const marginRight = 16;
+  const usableWidth = pageWidth - marginLeft - marginRight;
+  const marginBottom = 20;
+  let y = 6;
+
+  function ensureSpace(needed){
+    if(y + needed > pageHeight - marginBottom){
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  // Kop Surat
+  if(headerImgData){
+    const maxW = usableWidth;
+    const maxH = 22;
+    let imgW = maxW;
+    let imgH = imgW * (headerImgData.height / headerImgData.width);
+    if(imgH > maxH){
+      imgH = maxH;
+      imgW = imgH * (headerImgData.width / headerImgData.height);
+    }
+    const imgX = (pageWidth - imgW) / 2;
+    const format = headerImgData.dataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+    doc.addImage(headerImgData.dataUrl, format, imgX, y, imgW, imgH);
+    y += imgH + 3;
+    doc.setLineWidth(0.6);
+    doc.line(marginLeft, y, pageWidth-marginRight, y);
+    y += 6;
+  }else{
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    doc.text('PEMERINTAH PROVINSI BALI', pageWidth/2, y, {align:'center'});
+    y += 5;
+    doc.text('SMK NEGERI 4 NEGARA', pageWidth/2, y, {align:'center'});
+    y += 3.5;
+    doc.setLineWidth(0.6);
+    doc.line(marginLeft, y, pageWidth-marginRight, y);
+    y += 6;
+  }
+
+  // Judul
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('JURNAL DAN REFLEKSI PASCA PEMBELAJARAN GURU (SIPAJAR)', pageWidth/2, y, {align:'center'});
+  y += 5.5;
+  doc.text('TAHUN PELAJARAN 2026/2027', pageWidth/2, y, {align:'center'});
+  y += 9;
+
+  // A. Jurnal Guru
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('A. Jurnal Guru', marginLeft, y);
+  y += 5;
+
+  const head = [['No','Tanggal','Jam Ke','Kelas','Materi','Kehadiran']];
+  const body = matched.map((e, i) => [
+    String(i+1),
+    formatDate(e.tanggal),
+    e.jam || '-',
+    e.kelas || '-',
+    e.materi || '-',
+    absenText(e)
+  ]);
+
+  doc.autoTable({
+    head: head,
+    body: body,
+    startY: y,
+    margin: { left: marginLeft, right: marginRight },
+    theme: 'grid',
+    styles: { font: 'helvetica', fontSize: 12, cellPadding: 1.8, valign: 'top', overflow: 'linebreak', lineWidth: 0.35, lineColor: [0,0,0] },
+    headStyles: { fillColor: [63,98,89], textColor: 255, fontStyle: 'bold', fontSize: 12, halign: 'center', cellPadding: 2, lineWidth: 0.35, lineColor: [0,0,0] },
+    bodyStyles: { fontSize: 12, lineWidth: 0.35, lineColor: [0,0,0] },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 26 },
+      2: { cellWidth: 18, halign: 'center' },
+      3: { cellWidth: 18, halign: 'center' },
+      4: { cellWidth: 'auto' },
+      5: { cellWidth: 'auto' }
+    }
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // B. Refleksi Pasca Pembelajaran
+  ensureSpace(20);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('B. Refleksi Pasca Pembelajaran', marginLeft, y);
+  y += 7;
+
+  function addRefleksi(label, value){
+    const indentX = marginLeft + 5;
+    const boxWidth = pageWidth - marginRight - indentX;
+    const tableLineWidth = 0.35;
+
+    ensureSpace(12);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    const labelLines = doc.splitTextToSize(label, boxWidth);
+    ensureSpace(labelLines.length * 5.5);
+    doc.text(labelLines, indentX, y);
+    y += labelLines.length * 5.5 + 0.5;
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(12);
+    const lines = doc.splitTextToSize(value && value.trim() ? value : '-', boxWidth - 6);
+    const lineHeight = 5.5;
+    const boxPadV = 3;
+    const boxHeight = lines.length * lineHeight + boxPadV * 2;
+    ensureSpace(boxHeight + 8);
+    doc.setLineWidth(tableLineWidth);
+    doc.rect(indentX, y, boxWidth, boxHeight, 'S');
+    doc.text(lines, indentX + 3, y + boxPadV + 4);
+    y += boxHeight + 8;
+  }
+
+  matched.forEach((e, idx) => {
+    if(matched.length > 1){
+      ensureSpace(8);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(12);
+      doc.text(`Sesi ${idx+1} — Kelas ${e.kelas || '-'} (Jam ke ${e.jam || '-'})`, marginLeft, y);
+      y += 6.5;
+    }
+    addRefleksi('1. Tuliskan pengalaman/hal-hal baik selama pembelajaran', e.refleksi1);
+    addRefleksi('2. Tuliskan hal-hal yang belum baik/kendala dihadapi selama pembelajaran', e.refleksi2);
+    addRefleksi('3. Tindak lanjut yang akan dilaksanakan untuk perbaikan pembelajaran', e.refleksi3);
+  });
+
+  // Tanda tangan — kiri (Kepala Sekolah) & kanan (Guru Mata Pelajaran)
+  ensureSpace(52);
+  y += 4;
+  const signY0 = y;
+  const rightX = pageWidth - marginRight;
+
+  // Kiri — Mengetahui / Kepala Sekolah
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  doc.text('Mengetahui,', marginLeft, signY0);
+  doc.text('Kepala SMKN 4 Negara', marginLeft, signY0 + 5);
+  doc.setFont('helvetica','bold');
+  doc.text(kepsek.nama || '-', marginLeft, signY0 + 27);
+  doc.setFont('helvetica','normal');
+  doc.text(`NIP. ${kepsek.nip || '-'}`, marginLeft, signY0 + 32);
+
+  // Kanan — Guru Mata Pelajaran (tetap)
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(12);
+  const wilayahTanggal = (wilayah ? wilayah + ', ' : '') + formatDate(tanggal);
+  doc.text(wilayahTanggal, rightX, signY0, {align:'right'});
+  doc.text(`Guru Mata Pelajaran ${guruData.mapel || ''}`.trim(), rightX, signY0 + 5, {align:'right'});
+  doc.setFont('helvetica','bold');
+  doc.text(guruData.nama, rightX, signY0 + 27, {align:'right'});
+  doc.setFont('helvetica','normal');
+  doc.text(`NIP. ${guruData.nip || '-'}`, rightX, signY0 + 32, {align:'right'});
+
+  const safeName = guruName.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  doc.save(`jurnal-mengajar-${safeName}-${tanggal}.pdf`);
+  showToast('PDF berhasil dibuat.');
+}
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 2400);
+}
+
+loadAll();
+</script>
+</body>
+</html>
